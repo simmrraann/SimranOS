@@ -1,11 +1,9 @@
 [build]
-  base    = "artifacts/simran-os"
-  command = "npm install && npm run build"
-  publish = "dist"
+  command = "corepack enable pnpm && pnpm install && pnpm --filter @workspace/simran-os run build"
+  publish = "artifacts/simran-os/dist/public"
 
 [build.environment]
   NODE_VERSION = "20"
-  NPM_VERSION = "10"
 
 [[redirects]]
   from = "/*"
