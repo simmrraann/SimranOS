@@ -268,7 +268,75 @@ export function useUpdateCurriculum() {
   });
 }
 
-// Analytics 
+// Analytics — Weekly Performance (synthesized from tasks)
+export function useGetWeeklyPerformance() {
+  return useQuery({
+    queryKey: ["analytics", "weekly_performance"],
+    queryFn: async () => {
+      // Fetch tasks completed in the last 7 days
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const { data: tasks } = await supabase
+        .from("tasks")
+        .select("completed, created_at")
+        .gte("created_at", sevenDaysAgo.toISOString());
+
+      const { data: habits } = await supabase
+        .from("habits")
+        .select("completed_today");
+
+      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const weekData = days.map((day, i) => ({
+        day,
+        tasksCompleted: 0,
+        habitsCompleted: 0,
+      }));
+
+      // Distribute tasks across days based on created_at
+      tasks?.forEach((t) => {
+        if (t.completed) {
+          const dayIndex = new Date(t.created_at).getDay();
+          weekData[dayIndex].tasksCompleted += 1;
+        }
+      });
+
+      // Add today's habits to the current day
+      const todayIndex = new Date().getDay();
+      weekData[todayIndex].habitsCompleted =
+        habits?.filter((h) => h.completed_today).length ?? 0;
+
+      return weekData;
+    },
+  });
+}
+
+// Analytics — Task Distribution by category
+export function useGetTaskDistribution() {
+  return useQuery({
+    queryKey: ["analytics", "task_distribution"],
+    queryFn: async () => {
+      const { data: tasks, error } = await supabase
+        .from("tasks")
+        .select("category");
+      if (error) throw error;
+
+      // Count tasks per category
+      const counts: Record<string, number> = {};
+      tasks?.forEach((t) => {
+        const cat = t.category || "uncategorized";
+        counts[cat] = (counts[cat] || 0) + 1;
+      });
+
+      return Object.entries(counts).map(([category, count]) => ({
+        category,
+        count,
+      }));
+    },
+  });
+}
+
+// Analytics — Dashboard Summary
 export function useGetDashboardSummary() {
   return useQuery({
     queryKey: getGetDashboardSummaryQueryKey(),
