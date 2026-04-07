@@ -8,6 +8,38 @@ export const getListGoalsQueryKey = () => ["goals"];
 export const getListBusinessMetricsQueryKey = () => ["business_metrics"];
 export const getGetDashboardSummaryQueryKey = () => ["dashboard_summary"];
 
+// Business Metrics
+export function useListBusinessMetrics() {
+  return useQuery({
+    queryKey: getListBusinessMetricsQueryKey(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from("business_metrics").select("*").order("id", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useCreateBusinessMetric() {
+  return useMutation({
+    mutationFn: async ({ data }: { data: any }) => {
+      const { data: result, error } = await supabase.from("business_metrics").insert(data).select().single();
+      if (error) throw error;
+      return result;
+    },
+  });
+}
+
+export function useUpdateBusinessMetric() {
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const { data: result, error } = await supabase.from("business_metrics").update(data).eq("id", id).select().single();
+      if (error) throw error;
+      return result;
+    },
+  });
+}
+
 // Tasks
 export function useListTasks(params?: { category?: string; block?: string }) {
   return useQuery({
