@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, CheckSquare, Target, Zap, TrendingUp, BarChart2, CalendarDays, Menu } from "lucide-react";
+import { LayoutDashboard, CheckSquare, Target, Zap, TrendingUp, BarChart2, CalendarDays, Menu, Bug } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -12,6 +12,7 @@ const navItems = [
   { href: "/content", label: "Content", icon: TrendingUp },
   { href: "/agency", label: "AIJugaad", icon: BarChart2 },
   { href: "/curriculum", label: "Curriculum", icon: CalendarDays },
+  { href: "/debug", label: "Debug", icon: Bug },
 ];
 
 export function Sidebar() {
