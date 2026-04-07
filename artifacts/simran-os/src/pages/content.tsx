@@ -1,83 +1,111 @@
-import { Link } from "wouter";
 import { useListContentSeries } from "@/hooks/useSupabaseQueries";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Video, Sparkles, Instagram, Plus, Film } from "lucide-react";
+import { Video, CheckCircle2, Pencil, Clock, Sparkles, TrendingUp, Instagram } from "lucide-react";
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  done: { label: "Published", color: "bg-emerald-100 text-emerald-700" },
-  scripting: { label: "Scripting", color: "bg-primary/10 text-primary" },
-  pending: { label: "Pending", color: "bg-muted text-muted-foreground" },
+const statusConfig: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
+  done: { label: "Published", color: "bg-secondary/10 text-secondary border-secondary/20", icon: CheckCircle2 },
+  scripting: { label: "Scripting", color: "bg-primary/10 text-primary border-primary/20", icon: Pencil },
+  pending: { label: "Planned", color: "bg-muted text-muted-foreground border-border", icon: Clock },
 };
 
 export default function Content() {
   const { data: series, isLoading } = useListContentSeries();
 
+  const doneCount = series?.filter((s) => s.status === "done").length ?? 0;
+  const totalCount = series?.length ?? 0;
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <header className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Video className="w-7 h-7 text-secondary" />
-            Content Studio
-          </h1>
-          <p className="text-muted-foreground mt-1">Your content series and production pipeline</p>
-        </div>
+      <header>
+        <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-accent/10">
+            <Video className="w-6 h-6 text-accent" />
+          </div>
+          Content Studio
+        </h1>
+        <p className="text-muted-foreground mt-1">Track your content series and publishing pipeline</p>
       </header>
 
-      {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-28 rounded-2xl" />
-          ))}
-        </div>
-      ) : !series || series.length === 0 ? (
-        /* ✨ Beautiful empty state */
-        <Card className="glass-card border-secondary/10 glow-pink">
-          <CardContent className="flex flex-col items-center justify-center py-16 px-6 text-center">
-            <div className="w-20 h-20 rounded-full bg-secondary/10 flex items-center justify-center mb-5 animate-float">
-              <Film className="w-10 h-10 text-secondary" />
-            </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">No content yet ✨</h3>
-            <p className="text-muted-foreground text-sm max-w-sm mb-6">
-              Start tracking your content series here. Add reels, scripts, and video ideas to stay on top of your creative game.
-            </p>
-            <Button className="bg-gradient-to-r from-secondary to-primary text-white rounded-full px-6 shadow-md hover:shadow-lg transition-all">
-              <Plus className="w-4 h-4 mr-2" />
-              Create First Series
-            </Button>
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <Card className="glass-card border-border/50 soft-shadow">
+          <CardContent className="p-5 text-center">
+            <p className="text-3xl font-bold text-accent">{doneCount}</p>
+            <p className="text-xs text-muted-foreground mt-1 font-medium">Published</p>
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {series.map((item: any) => {
-            const status = statusConfig[item.status] || statusConfig.pending;
-            return (
-              <Card
-                key={item.id}
-                className="bg-white/70 backdrop-blur-sm border-border/50 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-              >
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-secondary/10 to-primary/10 flex items-center justify-center">
-                        <Instagram className="w-5 h-5 text-secondary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground text-sm">{item.title}</h3>
-                        <p className="text-xs text-muted-foreground mt-0.5 capitalize">{item.platform}</p>
-                      </div>
+        <Card className="glass-card border-border/50 soft-shadow">
+          <CardContent className="p-5 text-center">
+            <p className="text-3xl font-bold text-primary">{totalCount - doneCount}</p>
+            <p className="text-xs text-muted-foreground mt-1 font-medium">In Progress</p>
+          </CardContent>
+        </Card>
+        <Card className="glass-card border-border/50 soft-shadow hidden md:block">
+          <CardContent className="p-5 text-center">
+            <p className="text-3xl font-bold text-foreground">{totalCount}</p>
+            <p className="text-xs text-muted-foreground mt-1 font-medium">Total Episodes</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Content List */}
+      <Card className="glass-card border-border/50 soft-shadow">
+        <CardHeader className="pb-4 border-b border-border/50">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Instagram className="w-5 h-5 text-accent" />
+            Marketing Re-Coded Series
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6">
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-16 w-full rounded-xl" />
+              ))}
+            </div>
+          ) : series && series.length > 0 ? (
+            <div className="space-y-3">
+              {series.map((item, index) => {
+                const config = statusConfig[item.status] || statusConfig.pending;
+                const StatusIcon = config.icon;
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-white/40 hover:bg-white/70 hover:border-primary/20 transition-all group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-sm font-bold text-primary">
+                      {index + 1}
                     </div>
-                    <Badge className={`text-xs border-0 ${status.color}`}>{status.label}</Badge>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{item.title}</p>
+                      <p className="text-xs text-muted-foreground capitalize">{item.platform}</p>
+                    </div>
+                    <Badge className={`text-xs border ${config.color} gap-1`}>
+                      <StatusIcon className="w-3 h-3" />
+                      {config.label}
+                    </Badge>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                );
+              })}
+            </div>
+          ) : (
+            /* Empty State */
+            <div className="text-center py-16">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-accent/10 flex items-center justify-center">
+                <Video className="w-8 h-8 text-accent/50" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-1">No content yet ✨</h3>
+              <p className="text-sm text-muted-foreground mb-4">Start by adding your first content series</p>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-medium border border-accent/20 cursor-pointer hover:bg-accent/20 transition-colors">
+                <Sparkles className="w-4 h-4" />
+                Coming Soon
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

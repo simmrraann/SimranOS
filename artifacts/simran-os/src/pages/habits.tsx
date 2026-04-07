@@ -1,9 +1,8 @@
 import { useListHabits, useToggleHabit } from "@/hooks/useSupabaseQueries";
-import { Zap, Clock, Flame, CheckCircle2, Circle, Sparkles } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Zap, Clock, Flame, CheckCircle2, Circle, Sparkles, Heart } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { useQueryClient } from "@tanstack/react-query";
 
 export default function Habits() {
   const queryClient = useQueryClient();
@@ -14,8 +13,8 @@ export default function Habits() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Daily Rituals</h1>
-          <p className="text-muted-foreground">Building the foundation for success</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">Daily Rituals</h1>
+          <p className="text-muted-foreground">Loading your rituals...</p>
         </div>
         <div className="grid gap-6 lg:grid-cols-2">
           <Skeleton className="h-96 w-full rounded-2xl" />
@@ -25,149 +24,153 @@ export default function Habits() {
     );
   }
 
-  const nonNegotiables = habits.filter((h) => h.type === "non_negotiable");
-  const scheduled = habits.filter((h) => h.type === "scheduled");
-
-  const completedCount = habits.filter((h) => h.completed_today).length;
+  const nonNegotiables = habits.filter(h => h.type === 'non_negotiable');
+  const scheduled = habits.filter(h => h.type === 'scheduled');
+  const completedCount = habits.filter(h => h.completed_today).length;
   const totalCount = habits.length;
-  const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   const handleToggle = (id: number) => {
-    toggleHabit.mutate(
-      { id },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["habits"] });
-        },
-      }
-    );
+    toggleHabit.mutate({ id }, {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: ["habits"] }),
+    });
   };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
-          <Zap className="h-8 w-8 text-secondary" />
+      <header>
+        <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-accent/10">
+            <Zap className="w-6 h-6 text-accent" />
+          </div>
           Daily Rituals
         </h1>
-        <p className="text-muted-foreground text-lg">Your foundation to becoming a millionaire by 21.</p>
-      </div>
+        <p className="text-muted-foreground text-base mt-1">Your foundation to becoming a millionaire by 21 ✨</p>
+      </header>
 
       {/* Progress */}
-      <Card className="glass-card border-secondary/10 glow-pink">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-semibold text-foreground">Rituals Completed</span>
-            <span className="text-sm font-bold text-secondary">{progress}%</span>
+      <Card className="glass-card border-accent/10 soft-shadow relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-2xl -mr-16 -mt-16" />
+        <CardContent className="p-6 relative z-10">
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Heart className="w-4 h-4 text-accent" />
+              Today's Rituals
+            </span>
+            <span className="text-sm font-bold text-accent">{progressPct}%</span>
           </div>
-          <div className="h-2.5 bg-secondary/10 rounded-full overflow-hidden">
+          <div className="h-3 rounded-full bg-accent/10 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-secondary to-primary rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
+              className="h-full rounded-full bg-gradient-to-r from-accent to-primary transition-all duration-500"
+              style={{ width: `${progressPct}%` }}
             />
           </div>
-          <p className="text-xs text-muted-foreground mt-2">{completedCount} of {totalCount} rituals done today</p>
+          <p className="text-xs text-muted-foreground mt-2">{completedCount} of {totalCount} rituals completed</p>
         </CardContent>
       </Card>
 
-      {habits.length === 0 ? (
-        <Card className="glass-card border-secondary/10">
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-20 h-20 rounded-full bg-secondary/10 flex items-center justify-center mb-5 animate-float">
-              <Sparkles className="w-10 h-10 text-secondary" />
-            </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">No habits yet ✨</h3>
-            <p className="text-muted-foreground text-sm max-w-sm mb-6">
-              Build your daily ritual stack. Consistency is the key to your millionaire journey.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* NON-NEGOTIABLES */}
-          <Card className="bg-white/70 backdrop-blur-sm border-l-4 border-l-secondary shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-4 border-b border-border/30">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Flame className="h-5 w-5 text-secondary" />
-                Non-Negotiables
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="space-y-3">
-                {nonNegotiables.map((habit) => (
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* NON-NEGOTIABLES */}
+        <Card className="glass-card border-l-4 border-l-accent soft-shadow">
+          <CardHeader className="pb-4 border-b border-border/50">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Flame className="h-5 w-5 text-accent" />
+              Non-Negotiables
+              <span className="ml-auto text-xs font-bold text-accent bg-accent/10 px-2 py-1 rounded-full">
+                {nonNegotiables.filter(h => h.completed_today).length}/{nonNegotiables.length}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {nonNegotiables.length > 0 ? (
+              <div className="space-y-2">
+                {nonNegotiables.map(habit => (
                   <div
                     key={habit.id}
-                    className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all duration-200 ${
+                    className={`flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer group ${
                       habit.completed_today
-                        ? "bg-secondary/5 border-secondary/20"
-                        : "bg-white/50 border-border/30 hover:bg-secondary/5 hover:border-secondary/20"
+                        ? "bg-accent/5 border-accent/20"
+                        : "border-border/50 bg-white/40 hover:bg-white/70 hover:border-accent/10"
                     }`}
                     onClick={() => handleToggle(habit.id)}
                   >
                     <div className="flex items-center gap-4">
-                      <button className="focus:outline-none">
-                        {habit.completed_today ? (
-                          <CheckCircle2 className="h-6 w-6 text-secondary" />
-                        ) : (
-                          <Circle className="h-6 w-6 text-muted-foreground/30" />
-                        )}
-                      </button>
-                      <span className={`font-medium text-sm ${habit.completed_today ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                      {habit.completed_today ? (
+                        <CheckCircle2 className="h-5 w-5 text-accent shrink-0" />
+                      ) : (
+                        <Circle className="h-5 w-5 text-muted-foreground/30 shrink-0 group-hover:text-accent/30 transition-colors" />
+                      )}
+                      <span className={`font-medium text-sm ${habit.completed_today ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
                         {habit.name}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-bold">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 text-accent text-xs font-bold">
                       <Flame className="h-3 w-3" />
                       {habit.streak}
                     </div>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            ) : (
+              <div className="text-center py-12">
+                <Flame className="w-8 h-8 mx-auto text-accent/30 mb-2" />
+                <p className="text-sm text-muted-foreground">No non-negotiables yet ✨</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* DAILY SCHEDULE */}
-          <Card className="bg-white/70 backdrop-blur-sm border-l-4 border-l-accent shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-4 border-b border-border/30">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Clock className="h-5 w-5 text-accent" />
-                Daily Schedule
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="space-y-2">
+        {/* DAILY SCHEDULE */}
+        <Card className="glass-card border-l-4 border-l-secondary soft-shadow">
+          <CardHeader className="pb-4 border-b border-border/50">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Clock className="h-5 w-5 text-secondary" />
+              Daily Schedule
+              <span className="ml-auto text-xs font-bold text-secondary bg-secondary/10 px-2 py-1 rounded-full">
+                {scheduled.filter(h => h.completed_today).length}/{scheduled.length}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {scheduled.length > 0 ? (
+              <div className="space-y-1.5">
                 {scheduled.map((habit) => (
                   <div
                     key={habit.id}
-                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 ${
+                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer group ${
                       habit.completed_today
-                        ? "bg-accent/5 border-accent/20"
-                        : "bg-white/50 border-border/30 hover:bg-accent/5 hover:border-accent/20"
+                        ? "bg-secondary/5 border-secondary/20"
+                        : "border-border/50 bg-white/40 hover:bg-white/70 hover:border-secondary/10"
                     }`}
                     onClick={() => handleToggle(habit.id)}
                   >
-                    <div className="shrink-0">
-                      {habit.completed_today ? (
-                        <CheckCircle2 className="h-5 w-5 text-accent" />
-                      ) : (
-                        <Circle className="h-5 w-5 text-muted-foreground/30" />
-                      )}
-                    </div>
+                    {habit.completed_today ? (
+                      <CheckCircle2 className="h-4 w-4 text-secondary shrink-0" />
+                    ) : (
+                      <Circle className="h-4 w-4 text-muted-foreground/30 shrink-0 group-hover:text-secondary/30 transition-colors" />
+                    )}
                     <div className="flex-1 min-w-0">
-                      <div className="text-[10px] font-bold text-accent tracking-wider uppercase">
-                        {habit.time_label}
-                      </div>
-                      <div className={`text-sm font-medium ${habit.completed_today ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                      <span className={`text-sm font-medium ${habit.completed_today ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
                         {habit.name}
-                      </div>
+                      </span>
                     </div>
+                    {habit.time_label && (
+                      <span className="text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full shrink-0 uppercase tracking-wider">
+                        {habit.time_label}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            ) : (
+              <div className="text-center py-12">
+                <Clock className="w-8 h-8 mx-auto text-secondary/30 mb-2" />
+                <p className="text-sm text-muted-foreground">No schedule items yet ✨</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

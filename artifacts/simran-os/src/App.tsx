@@ -14,7 +14,6 @@ import Content from "@/pages/content";
 import Curriculum from "@/pages/curriculum";
 import Analytics from "@/pages/analytics";
 import CalendarPage from "@/pages/calendar";
-import Debug from "@/pages/debug";
 
 const queryClient = new QueryClient();
 
@@ -30,7 +29,6 @@ function Router() {
       <Route path="/curriculum" component={Curriculum} />
       <Route path="/analytics" component={Analytics} />
       <Route path="/calendar" component={CalendarPage} />
-      <Route path="/debug" component={Debug} />
       <Route component={NotFound} />
     </Switch>
   );

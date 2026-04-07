@@ -26,9 +26,9 @@ const categoryLabels: Record<Category, string> = {
 };
 
 const priorityColors: Record<Priority, string> = {
-  low: "bg-emerald-100 text-emerald-700",
-  medium: "bg-amber-100 text-amber-700",
-  high: "bg-red-100 text-red-600",
+  low: "bg-secondary/10 text-secondary border-secondary/20",
+  medium: "bg-primary/10 text-primary border-primary/20",
+  high: "bg-accent/10 text-accent border-accent/20",
 };
 
 export default function Tasks() {
@@ -72,23 +72,25 @@ export default function Tasks() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header>
-        <h1 className="text-3xl font-bold flex items-center gap-3">
-          <CheckSquare className="w-7 h-7 text-primary" />
-          Task Manager
+        <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-primary/10">
+            <CheckSquare className="w-6 h-6 text-primary" />
+          </div>
+          Task Planner
         </h1>
         <p className="text-muted-foreground mt-1">Stay on top of everything that matters</p>
       </header>
 
       {/* Progress Bar */}
-      <Card className="glass-card border-primary/10 glow-primary">
+      <Card className="glass-card border-border/50 soft-shadow">
         <CardContent className="p-6">
           <div className="flex justify-between items-center mb-3">
             <span className="text-sm font-semibold text-foreground">Overall Completion</span>
             <span className="text-sm font-bold text-primary">{completionPct}%</span>
           </div>
-          <div className="h-2.5 bg-primary/10 rounded-full overflow-hidden">
+          <div className="h-3 rounded-full bg-primary/10 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
               style={{ width: `${completionPct}%` }}
             />
           </div>
@@ -97,20 +99,23 @@ export default function Tasks() {
       </Card>
 
       {/* Add Task */}
-      <Card className="bg-white/70 backdrop-blur-sm border-border/50 shadow-sm">
+      <Card className="glass-card border-border/50 soft-shadow">
         <CardContent className="p-6">
-          <h2 className="text-base font-semibold mb-4">Add New Task</h2>
+          <h2 className="text-base font-semibold mb-4 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            Add New Task
+          </h2>
           <div className="flex flex-col sm:flex-row gap-3">
             <Input
               placeholder="What needs to be done?"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-              className="flex-1 bg-white/80 border-border/50 focus:ring-primary/30"
+              className="flex-1 bg-white/60 border-border/50 focus:border-primary/30 focus:ring-primary/20"
               data-testid="input-task-title"
             />
             <Select value={newCategory} onValueChange={(v) => setNewCategory(v as Category)}>
-              <SelectTrigger className="w-full sm:w-36 bg-white/80 border-border/50">
+              <SelectTrigger className="w-full sm:w-36 bg-white/60 border-border/50" data-testid="select-task-category">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -120,7 +125,7 @@ export default function Tasks() {
               </SelectContent>
             </Select>
             <Select value={newPriority} onValueChange={(v) => setNewPriority(v as Priority)}>
-              <SelectTrigger className="w-full sm:w-32 bg-white/80 border-border/50">
+              <SelectTrigger className="w-full sm:w-32 bg-white/60 border-border/50" data-testid="select-task-priority">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -132,7 +137,7 @@ export default function Tasks() {
             <Button
               onClick={handleAdd}
               disabled={!newTitle.trim() || createTask.isPending}
-              className="bg-gradient-to-r from-primary to-secondary text-white rounded-xl shadow-md hover:shadow-lg transition-all"
+              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground rounded-xl shadow-md hover:shadow-lg transition-all"
               data-testid="button-add-task"
             >
               <Plus className="w-4 h-4 mr-2" /> Add Task
@@ -151,7 +156,7 @@ export default function Tasks() {
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
               activeCategory === cat
                 ? "bg-primary text-white shadow-md glow-primary"
-                : "bg-white/70 border border-border/50 text-muted-foreground hover:bg-primary/5 hover:text-primary"
+                : "bg-white/60 border border-border/50 text-muted-foreground hover:bg-primary/5 hover:text-foreground"
             }`}
           >
             {cat === "all" ? "All Tasks" : categoryLabels[cat]}
@@ -160,7 +165,7 @@ export default function Tasks() {
       </div>
 
       {/* Task List */}
-      <Card className="bg-white/70 backdrop-blur-sm border-border/50 shadow-sm">
+      <Card className="glass-card border-border/50 soft-shadow">
         <CardContent className="p-6">
           {isLoading ? (
             <div className="space-y-3">
@@ -172,7 +177,7 @@ export default function Tasks() {
                 <div
                   key={task.id}
                   data-testid={`task-item-${task.id}`}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-primary/[0.03] transition-all group border border-transparent hover:border-border/50"
+                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/60 transition-all group border border-transparent hover:border-border/50"
                 >
                   <Checkbox
                     checked={task.completed}
@@ -183,7 +188,7 @@ export default function Tasks() {
                   <span className={`flex-1 text-sm ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
                     {task.title}
                   </span>
-                  <Badge className={`text-xs border-0 ${priorityColors[task.priority as Priority] ?? "bg-gray-100 text-gray-600"}`}>
+                  <Badge className={`text-xs border ${priorityColors[task.priority as Priority] ?? "bg-muted text-muted-foreground border-border"}`}>
                     {task.priority}
                   </Badge>
                   <Badge variant="outline" className="text-xs border-border/50 text-muted-foreground">
@@ -199,12 +204,12 @@ export default function Tasks() {
                 </div>
               ))}
               {!tasks?.length && (
-                <div className="flex flex-col items-center py-16 text-center">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 animate-float">
-                    <ListTodo className="w-8 h-8 text-primary" />
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <ListTodo className="w-8 h-8 text-primary/50" />
                   </div>
-                  <p className="font-semibold text-foreground mb-1">Nothing here yet ✨</p>
-                  <p className="text-sm text-muted-foreground">Start by adding your first task above</p>
+                  <h3 className="font-semibold text-foreground mb-1">No tasks here ✨</h3>
+                  <p className="text-sm text-muted-foreground">Add a task above to get started</p>
                 </div>
               )}
             </div>
