@@ -9,7 +9,9 @@ import Dashboard from "@/pages/dashboard";
 import Tasks from "@/pages/tasks";
 import Habits from "@/pages/habits";
 import Goals from "@/pages/goals";
-import Business from "@/pages/business";
+import Agency from "@/pages/agency";
+import Content from "@/pages/content";
+import Curriculum from "@/pages/curriculum";
 import Analytics from "@/pages/analytics";
 import CalendarPage from "@/pages/calendar";
 
@@ -22,7 +24,9 @@ function Router() {
       <Route path="/tasks" component={Tasks} />
       <Route path="/habits" component={Habits} />
       <Route path="/goals" component={Goals} />
-      <Route path="/business" component={Business} />
+      <Route path="/agency" component={Agency} />
+      <Route path="/content" component={Content} />
+      <Route path="/curriculum" component={Curriculum} />
       <Route path="/analytics" component={Analytics} />
       <Route path="/calendar" component={CalendarPage} />
       <Route component={NotFound} />

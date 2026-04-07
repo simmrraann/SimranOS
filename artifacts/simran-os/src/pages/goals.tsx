@@ -1,209 +1,150 @@
-import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  useListGoals,
-  useCreateGoal,
-  useUpdateGoal,
-  useDeleteGoal,
-  getListGoalsQueryKey,
-} from "@/hooks/useSupabaseQueries";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useListGoals, useUpdateGoal } from "@/hooks/useSupabaseQueries";
+import { Target, TrendingUp, Users, Plane, CheckCircle2, Circle } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, Target, Minus } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-type GoalType = "weekly" | "longterm";
 
 export default function Goals() {
-  const queryClient = useQueryClient();
-  const [newTitle, setNewTitle] = useState("");
-  const [newType, setNewType] = useState<GoalType>("longterm");
-  const [newTarget, setNewTarget] = useState("100");
-  const [newDescription, setNewDescription] = useState("");
-
   const { data: goals, isLoading } = useListGoals();
-  const createGoal = useCreateGoal();
   const updateGoal = useUpdateGoal();
-  const deleteGoal = useDeleteGoal();
 
-  const weeklyGoals = goals?.filter((g) => g.type === "weekly") ?? [];
-  const longtermGoals = goals?.filter((g) => g.type === "longterm") ?? [];
-
-  const handleAdd = async () => {
-    if (!newTitle.trim()) return;
-    await createGoal.mutateAsync({
-      data: {
-        title: newTitle.trim(),
-        type: newType,
-        target: parseInt(newTarget) || 100,
-        description: newDescription.trim() || undefined,
-      },
-    });
-    queryClient.invalidateQueries({ queryKey: getListGoalsQueryKey() });
-    setNewTitle("");
-    setNewDescription("");
-    setNewTarget("100");
-  };
-
-  const handleProgress = async (id: number, currentProgress: number, delta: number) => {
-    const newProgress = Math.max(0, currentProgress + delta);
-    await updateGoal.mutateAsync({ id, data: { progress: newProgress } });
-    queryClient.invalidateQueries({ queryKey: getListGoalsQueryKey() });
-  };
-
-  const handleDelete = async (id: number) => {
-    await deleteGoal.mutateAsync({ id });
-    queryClient.invalidateQueries({ queryKey: getListGoalsQueryKey() });
-  };
-
-  const GoalCard = ({ goal }: { goal: NonNullable<typeof goals>[0] }) => {
-    const pct = goal.target > 0 ? Math.min(100, Math.round((goal.progress / goal.target) * 100)) : 0;
+  if (isLoading || !goals) {
     return (
-      <div
-        data-testid={`goal-item-${goal.id}`}
-        className="p-4 rounded-xl border border-[#e8e6df] bg-white hover:border-primary/20 transition-all group"
-      >
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1 mr-4">
-            <h3 className="font-medium text-sm">{goal.title}</h3>
-            {goal.description && <p className="text-xs text-muted-foreground mt-0.5">{goal.description}</p>}
-          </div>
-          <button
-            onClick={() => handleDelete(goal.id)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-            data-testid={`button-delete-goal-${goal.id}`}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight mb-2">Simran's Milestones</h1>
+          <p className="text-muted-foreground">Tracking the journey to ₹2 Lakh</p>
         </div>
-        <div className="flex items-center gap-3 mb-3">
-          <Progress value={pct} className="flex-1 h-2 bg-[#e8e6df]" data-testid={`progress-goal-${goal.id}`} />
-          <span className="text-sm font-bold text-primary min-w-[2.5rem] text-right">{pct}%</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">{goal.progress} / {goal.target}</span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleProgress(goal.id, goal.progress, -1)}
-              className="w-7 h-7 rounded-full border border-[#e8e6df] flex items-center justify-center hover:bg-black/5 transition-colors"
-              data-testid={`button-progress-dec-${goal.id}`}
-            >
-              <Minus className="w-3 h-3" />
-            </button>
-            <button
-              onClick={() => handleProgress(goal.id, goal.progress, 1)}
-              className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center hover:bg-primary/20 transition-colors"
-              data-testid={`button-progress-inc-${goal.id}`}
-            >
-              <Plus className="w-3 h-3 text-primary" />
-            </button>
-          </div>
+        <div className="grid gap-6">
+          <Skeleton className="h-64 rounded-xl w-full" />
         </div>
       </div>
     );
+  }
+
+  const moneyGoals = goals.filter(g => g.category === 'money' && g.is_milestone).sort((a, b) => a.id - b.id);
+  const socialGoals = goals.filter(g => g.category === 'social').sort((a, b) => a.id - b.id);
+  const travelGoals = goals.filter(g => g.category === 'travel').sort((a, b) => a.id - b.id);
+  const bankGoal = goals.find(g => g.category === 'money' && !g.is_milestone);
+
+  const toggleMilestone = (goal: any) => {
+    const newStatus = goal.status === 'achieved' ? 'pending' : 'achieved';
+    const newProgress = newStatus === 'achieved' ? goal.target : 0;
+    updateGoal.mutate({ id: goal.id, data: { status: newStatus, progress: newProgress } });
+  };
+
+  const calculateProgress = (goal: any) => {
+    if (goal.target === 0) return 0;
+    return Math.min(100, Math.round((Number(goal.progress) / Number(goal.target)) * 100));
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <header>
-        <h1 className="text-3xl font-bold flex items-center gap-3">
-          <Target className="w-7 h-7 text-primary" />
-          Goals
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+          <Target className="h-8 w-8 text-primary" />
+          Milestones & Targets
         </h1>
-        <p className="text-muted-foreground mt-1">Vision without action is just a dream</p>
-      </header>
+        <p className="text-muted-foreground text-lg">Measurable steps toward the June vision.</p>
+      </div>
 
-      {/* Add Goal */}
-      <Card className="border-[#e8e6df] shadow-sm">
-        <CardContent className="p-6">
-          <h2 className="text-base font-semibold mb-4">Add New Goal</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-            <Input
-              placeholder="Goal title..."
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              className="bg-white border-[#e8e6df]"
-              data-testid="input-goal-title"
-            />
-            <Input
-              placeholder="Description (optional)"
-              value={newDescription}
-              onChange={(e) => setNewDescription(e.target.value)}
-              className="bg-white border-[#e8e6df]"
-              data-testid="input-goal-description"
-            />
-            <Select value={newType} onValueChange={(v) => setNewType(v as GoalType)}>
-              <SelectTrigger className="bg-white border-[#e8e6df]" data-testid="select-goal-type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="weekly">This Week</SelectItem>
-                <SelectItem value="longterm">Long-term</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input
-              type="number"
-              placeholder="Target (e.g. 100)"
-              value={newTarget}
-              onChange={(e) => setNewTarget(e.target.value)}
-              className="bg-white border-[#e8e6df]"
-              data-testid="input-goal-target"
-            />
-          </div>
-          <Button
-            onClick={handleAdd}
-            disabled={!newTitle.trim() || createGoal.isPending}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_12px_rgba(124,252,0,0.2)] hover:shadow-[0_0_16px_rgba(124,252,0,0.4)] transition-all"
-            data-testid="button-add-goal"
-          >
-            <Plus className="w-4 h-4 mr-2" /> Add Goal
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 lg:grid-cols-2">
+        
+        {/* MONEY MILESTONES */}
+        <Card className="border-l-4 border-l-primary shadow-sm h-full">
+          <CardHeader className="pb-4 border-b border-border/50">
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2 text-xl">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                Money Goals (Jan - June)
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              {moneyGoals.map(goal => {
+                const isAchieved = goal.status === 'achieved';
+                return (
+                  <div 
+                    key={goal.id} 
+                    className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all cursor-pointer ${isAchieved ? 'bg-primary/5 border-primary/30' : 'bg-card border-border/40 hover:border-primary/20 hover:bg-muted/30'}`}
+                    onClick={() => toggleMilestone(goal)}
+                  >
+                    {isAchieved ? (
+                      <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                    ) : (
+                      <Circle className="h-5 w-5 text-muted-foreground/30 shrink-0" />
+                    )}
+                    <span className={`text-sm font-semibold truncate ${isAchieved ? 'text-primary' : 'text-foreground'}`}>
+                      {goal.title}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
 
-      {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Weekly Goals */}
-          <Card className="border-[#e8e6df] shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-base font-semibold">Weekly Goals</h2>
-                <Badge className="bg-primary/10 text-primary border-0 text-xs">{weeklyGoals.length}</Badge>
+            {bankGoal && (
+              <div className="mt-8 pt-6 border-t border-border/50 space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-foreground">Bank Balance Target (June)</span>
+                  <span className="text-sm font-bold bg-muted px-2 py-1 rounded">₹2.50 Lakh</span>
+                </div>
+                <Progress value={calculateProgress(bankGoal)} className="h-2 bg-secondary/20" indicatorColor="bg-secondary" />
+                <p className="text-xs text-muted-foreground text-right">{calculateProgress(bankGoal)}% (35% savings goal)</p>
               </div>
-              <div className="space-y-3">
-                {weeklyGoals.map((goal) => <GoalCard key={goal.id} goal={goal} />)}
-                {weeklyGoals.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-8">No weekly goals yet</p>
-                )}
-              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="space-y-6">
+          {/* SOCIAL MEDIA GOALS */}
+          <Card className="border-l-4 border-l-pink-500 shadow-sm">
+            <CardHeader className="pb-4 border-b border-border/50">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Users className="h-5 w-5 text-pink-500" />
+                Social Media Targets
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-6">
+              {socialGoals.map(goal => (
+                <div key={goal.id} className="space-y-2">
+                  <div className="flex justify-between text-sm font-medium">
+                    <span>{goal.title}</span>
+                    <span>{Number(goal.progress).toLocaleString()} / {Number(goal.target).toLocaleString()}</span>
+                  </div>
+                  <Progress value={calculateProgress(goal)} className="h-2 bg-pink-500/20" indicatorColor="bg-pink-500" />
+                </div>
+              ))}
             </CardContent>
           </Card>
 
-          {/* Long-term Goals */}
-          <Card className="border-[#e8e6df] shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-base font-semibold">Long-term Goals</h2>
-                <Badge className="bg-primary/10 text-primary border-0 text-xs">{longtermGoals.length}</Badge>
-              </div>
-              <div className="space-y-3">
-                {longtermGoals.map((goal) => <GoalCard key={goal.id} goal={goal} />)}
-                {longtermGoals.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-8">No long-term goals yet</p>
-                )}
-              </div>
+          {/* TRAVEL UNLOCKS */}
+          <Card className="border-l-4 border-l-amber-500 shadow-sm relative overflow-hidden">
+            <div className="absolute opacity-5 -bottom-10 -right-10 pointer-events-none">
+              <Plane className="w-48 h-48" />
+            </div>
+            <CardHeader className="pb-4 border-b border-border/50">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Plane className="h-5 w-5 text-amber-500" />
+                Travel Unlocks (Reward Milestones)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4 relative z-10">
+              {travelGoals.map(goal => (
+                <div key={goal.id} className="flex items-center justify-between p-3 rounded border border-border/40 bg-card">
+                  <div className="font-semibold text-foreground flex items-center gap-2">
+                    {goal.title}
+                  </div>
+                  <div className="text-xs font-bold uppercase tracking-wider bg-amber-500/10 text-amber-600 px-3 py-1 rounded-full">
+                    Unlock at ₹{Number(goal.target).toLocaleString()}
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </div>
-      )}
+
+      </div>
     </div>
   );
 }

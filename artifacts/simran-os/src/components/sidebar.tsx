@@ -6,12 +6,12 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/tasks", label: "Tasks", icon: CheckSquare },
+  { href: "/tasks", label: "Planner", icon: CheckSquare },
   { href: "/habits", label: "Habits", icon: Zap },
   { href: "/goals", label: "Goals", icon: Target },
-  { href: "/business", label: "Business", icon: TrendingUp },
-  { href: "/analytics", label: "Analytics", icon: BarChart2 },
-  { href: "/calendar", label: "Calendar", icon: CalendarDays },
+  { href: "/content", label: "Content", icon: TrendingUp },
+  { href: "/agency", label: "AIJugaad", icon: BarChart2 },
+  { href: "/curriculum", label: "Curriculum", icon: CalendarDays },
 ];
 
 export function Sidebar() {

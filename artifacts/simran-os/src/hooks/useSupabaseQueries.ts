@@ -9,14 +9,14 @@ export const getListBusinessMetricsQueryKey = () => ["business_metrics"];
 export const getGetDashboardSummaryQueryKey = () => ["dashboard_summary"];
 
 // Tasks
-export function useListTasks(params?: { category?: string }) {
+export function useListTasks(params?: { category?: string; block?: string }) {
   return useQuery({
-    queryKey: [...getListTasksQueryKey(), params?.category],
+    queryKey: [...getListTasksQueryKey(), params?.category, params?.block],
     queryFn: async () => {
       let query = supabase.from("tasks").select("*").order("id", { ascending: false });
-      if (params?.category) {
-        query = query.eq("category", params.category);
-      }
+      if (params?.category) query = query.eq("category", params.category);
+      if (params?.block) query = query.eq("block", params.block);
+      
       const { data, error } = await query;
       if (error) throw error;
       return data;
@@ -59,9 +59,9 @@ export function useListHabits() {
   return useQuery({
     queryKey: getListHabitsQueryKey(),
     queryFn: async () => {
-      const { data, error } = await supabase.from("habits").select("*").order("id", { ascending: false });
+      const { data, error } = await supabase.from("habits").select("*").order("id", { ascending: true });
       if (error) throw error;
-      return data?.map(d => ({ ...d, completedToday: d.completed_today }));
+      return data;
     },
   });
 }
@@ -71,6 +71,8 @@ export function useCreateHabit() {
     mutationFn: async ({ data }: { data: any }) => {
       const { data: result, error } = await supabase.from("habits").insert({
         name: data.name,
+        type: data.type || 'non_negotiable',
+        time_label: data.time_label,
         icon: data.icon,
         completed_today: false,
         streak: 0
@@ -115,7 +117,7 @@ export function useListGoals() {
   return useQuery({
     queryKey: getListGoalsQueryKey(),
     queryFn: async () => {
-      const { data, error } = await supabase.from("goals").select("*").order("id", { ascending: false });
+      const { data, error } = await supabase.from("goals").select("*").order("id", { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -152,33 +154,82 @@ export function useDeleteGoal() {
   });
 }
 
-// Business Metrics
-export function useListBusinessMetrics() {
+// Agency Pipeline
+export function useListAgencyPipeline() {
   return useQuery({
-    queryKey: getListBusinessMetricsQueryKey(),
+    queryKey: ["agency_pipeline"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("business_metrics").select("*").order("id", { ascending: false });
+      const { data, error } = await supabase.from("agency_pipeline").select("*").order("id", { ascending: true });
       if (error) throw error;
       return data;
     },
   });
 }
 
-export function useCreateBusinessMetric() {
+export function useCreatePipelineItem() {
   return useMutation({
     mutationFn: async ({ data }: { data: any }) => {
-      const { data: result, error } = await supabase.from("business_metrics").insert(data).select().single();
+      const { data: result, error } = await supabase.from("agency_pipeline").insert(data).select().single();
       if (error) throw error;
       return result;
     },
   });
 }
 
-export function useUpdateBusinessMetric() {
-  // implemented similarly if needed
+export function useUpdatePipelineItem() {
+    return useMutation({
+      mutationFn: async ({ id, data }: { id: number; data: any }) => {
+        const { data: result, error } = await supabase.from("agency_pipeline").update(data).eq("id", id).select().single();
+        if (error) throw error;
+        return result;
+      },
+    });
+  }
+
+// Content Series
+export function useListContentSeries() {
+  return useQuery({
+    queryKey: ["content_series"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("content_series").select("*").order("id", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+// Curriculum Outputs
+export function useGetTodayCurriculum() {
+  return useQuery({
+    queryKey: ["curriculum_outputs", "today"],
+    queryFn: async () => {
+      // First try to fetch today's
+      const todayString = new Date().toISOString().split("T")[0];
+      const { data, error } = await supabase.from("curriculum_outputs")
+        .select("*")
+        .eq("date", todayString)
+        .single();
+      
+      if (error && error.code !== "PGRST116") throw error; // PGRST116 is not found
+      
+      if (!data) {
+        // If it doesn't exist, create it
+        const { data: newData, error: insertError } = await supabase.from("curriculum_outputs")
+          .insert({ date: todayString })
+          .select()
+          .single();
+        if (insertError) throw insertError;
+        return newData;
+      }
+      return data;
+    },
+  });
+}
+
+export function useUpdateCurriculum() {
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: any }) => {
-      const { data: result, error } = await supabase.from("business_metrics").update(data).eq("id", id).select().single();
+      const { data: result, error } = await supabase.from("curriculum_outputs").update(data).eq("id", id).select().single();
       if (error) throw error;
       return result;
     },
@@ -190,79 +241,32 @@ export function useGetDashboardSummary() {
   return useQuery({
     queryKey: getGetDashboardSummaryQueryKey(),
     queryFn: async () => {
-      // In a real app we might write a Supabase RPC function to do this in one query.
-      // Here we will fetch what we need and aggregate, similar to analytics.ts.
-      const [{ count: tasksTotal }, { count: tasksCompleted }, { count: habitsTotal }, { count: habitsCompletedToday }, { count: goalsTotal }, { data: goals }, { data: agencyMetrics }] = await Promise.all([
+      const [{ count: tasksTotal }, { count: tasksCompleted }, { count: habitsTotal }, { count: habitsCompletedToday }, { data: goals }] = await Promise.all([
         supabase.from("tasks").select("*", { count: 'exact', head: true }),
         supabase.from("tasks").select("*", { count: 'exact', head: true }).eq("completed", true),
         supabase.from("habits").select("*", { count: 'exact', head: true }),
         supabase.from("habits").select("*", { count: 'exact', head: true }).eq("completed_today", true),
-        supabase.from("goals").select("*", { count: 'exact', head: true }),
-        supabase.from("goals").select("progress, target"),
-        supabase.from("business_metrics").select("value, change").eq("category", "agency")
+        supabase.from("goals").select("progress, target")
       ]);
 
       let avgProgress = 0;
       if (goals && goals.length > 0) {
-        avgProgress = goals.reduce((acc, g) => acc + (g.target > 0 ? (g.progress / g.target) * 100 : 0), 0) / goals.length;
+        avgProgress = goals.reduce((acc, g) => acc + (g.target > 0 ? (Number(g.progress) / Number(g.target)) * 100 : 0), 0) / goals.length;
       }
 
-      let totalRevenue = 0;
-      let revenueChange = 0;
-      if (agencyMetrics && agencyMetrics.length > 0) {
-        totalRevenue = agencyMetrics.reduce((acc, m) => acc + (m.value || 0), 0);
-        revenueChange = agencyMetrics.reduce((acc, m) => acc + (m.change || 0), 0) / agencyMetrics.length;
-      }
+      const { data: agencyClients } = await supabase.from("agency_pipeline").select("*");
+      const clientValue = agencyClients ? agencyClients.reduce((acc, c) => acc + Number(c.value), 0) : 0;
 
       return {
         tasksTotal: tasksTotal || 0,
         tasksCompleted: tasksCompleted || 0,
         habitsTotal: habitsTotal || 0,
         habitsCompletedToday: habitsCompletedToday || 0,
-        goalsTotal: goalsTotal || 0,
+        goalsTotal: goals?.length || 0,
         goalsAvgProgress: Math.round(avgProgress),
-        totalRevenue,
-        revenueChange
+        totalRevenue: clientValue,
+        revenueChange: 0
       };
-    },
-  });
-}
-
-export function useGetWeeklyPerformance() {
-  return useQuery({
-    queryKey: ["weekly_performance"],
-    queryFn: async () => {
-      const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-      const { count: tasksCompleted } = await supabase.from("tasks").select("*", { count: 'exact', head: true }).eq("completed", true);
-      const { count: habitsCompleted } = await supabase.from("habits").select("*", { count: 'exact', head: true }).eq("completed_today", true);
-      
-      const tc = tasksCompleted || 0;
-      const hc = habitsCompleted || 0;
-
-      return days.map((day) => ({
-        day,
-        tasksCompleted: Math.round((tc / 7) * (0.5 + Math.random() * 1.0)),
-        habitsCompleted: Math.round((hc / 7) * (0.5 + Math.random() * 1.0)),
-      }));
-    },
-  });
-}
-
-export function useGetTaskDistribution() {
-  return useQuery({
-    queryKey: ["task_distribution"],
-    queryFn: async () => {
-      const categories = ["today", "weekly", "longterm"];
-      const promises = categories.map(async (cat) => {
-        const { count: total } = await supabase.from("tasks").select("*", { count: 'exact', head: true }).eq("category", cat);
-        const { count: completed } = await supabase.from("tasks").select("*", { count: 'exact', head: true }).eq("category", cat).eq("completed", true);
-        return {
-          category: cat,
-          count: total || 0,
-          completed: completed || 0
-        };
-      });
-      return await Promise.all(promises);
     },
   });
 }

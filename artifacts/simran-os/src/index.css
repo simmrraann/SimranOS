@@ -67,69 +67,85 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-:root, .dark {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
-
-  --opaque-button-border-intensity: -8;
-
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
-
-  --background: 40 15% 96%;
-  --foreground: 0 0% 7%;
-  --border: 38 18% 88%;
+:root {
+  --background: 240 10% 99%;
+  --foreground: 240 10% 4%;
+  
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 7%;
-  --card-border: 38 18% 88%;
-  --sidebar: 40 20% 97%;
-  --sidebar-foreground: 0 0% 7%;
-  --sidebar-border: 38 18% 88%;
-  --sidebar-primary: 87 100% 49%;
-  --sidebar-primary-foreground: 0 0% 7%;
-  --sidebar-accent: 87 100% 49%;
-  --sidebar-accent-foreground: 0 0% 7%;
-  --sidebar-ring: 87 100% 49%;
+  --card-foreground: 240 10% 4%;
+  --card-border: 240 5% 90%;
+  
   --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 7%;
-  --popover-border: 38 18% 88%;
-  --primary: 87 100% 49%;
-  --primary-foreground: 0 0% 7%;
-  --secondary: 40 15% 94%;
-  --secondary-foreground: 0 0% 40%;
-  --muted: 40 15% 94%;
-  --muted-foreground: 0 0% 40%;
-  --accent: 87 100% 49%;
-  --accent-foreground: 0 0% 7%;
+  --popover-foreground: 240 10% 4%;
+  --popover-border: 240 5% 90%;
+  
+  --primary: 248 57% 67%; /* #7F77DD */
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 160 69% 37%; /* #1D9E75 (Teal) */
+  --secondary-foreground: 0 0% 100%;
+  
+  --muted: 240 5% 96%;
+  --muted-foreground: 240 4% 46%;
+  
+  --accent: 15 65% 52%; /* #D85A30 (Coral) */
+  --accent-foreground: 0 0% 100%;
+  
   --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 100%;
-  --input: 38 18% 88%;
-  --ring: 87 100% 49%;
-  --chart-1: 87 100% 40%;
-  --chart-2: 87 80% 55%;
-  --chart-3: 40 30% 70%;
-  --chart-4: 200 30% 65%;
-  --chart-5: 300 20% 60%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 240 5% 90%;
+  --input: 240 5% 90%;
+  --ring: 248 57% 67%;
+
+  /* Custom Chart/Stat Colors using her requested accents */
+  --chart-1: 248 57% 67%; /* #7F77DD Purple */
+  --chart-2: 160 69% 37%; /* #1D9E75 Teal */
+  --chart-3: 15 65% 52%;  /* #D85A30 Coral */
+  --chart-4: 35 78% 41%;  /* #BA7517 Amber */
+  --chart-5: 340 60% 58%; /* #D4537E Pink */
 
   --app-font-sans: 'Inter', sans-serif;
-  --app-font-serif: Georgia, serif;
-  --app-font-mono: Menlo, monospace;
-  --radius: 1.25rem;
+  --app-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --radius: 1.0rem;
+}
 
-  --shadow-sm: 0px 1px 8px 0px rgba(0,0,0,0.04);
-  --shadow: 0px 2px 12px 0px rgba(0,0,0,0.06);
-  --shadow-md: 0px 4px 16px 0px rgba(0,0,0,0.08);
+.dark {
+  --background: 240 10% 4%;
+  --foreground: 0 0% 98%;
   
-  --tracking-normal: 0em;
-  --spacing: 0.25rem;
+  --card: 240 10% 6%;
+  --card-foreground: 0 0% 98%;
+  --card-border: 240 4% 16%;
+  
+  --popover: 240 10% 6%;
+  --popover-foreground: 0 0% 98%;
+  --popover-border: 240 4% 16%;
+  
+  --primary: 248 57% 67%; /* #7F77DD */
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 160 69% 37%; /* #1D9E75 Teal */
+  --secondary-foreground: 0 0% 98%;
+  
+  --muted: 240 4% 16%;
+  --muted-foreground: 240 5% 65%;
+  
+  --accent: 15 65% 52%; /* #D85A30 Coral */
+  --accent-foreground: 0 0% 98%;
+  
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 0 0% 98%;
 
-  --sidebar-primary-border: hsl(var(--sidebar-primary));
-  --sidebar-accent-border: hsl(var(--sidebar-accent));
-  --primary-border: hsl(var(--primary));
-  --secondary-border: hsl(var(--secondary));
-  --muted-border: hsl(var(--muted));
-  --accent-border: hsl(var(--accent));
-  --destructive-border: hsl(var(--destructive));
+  --border: 240 4% 16%;
+  --input: 240 4% 16%;
+  --ring: 248 57% 67%;
+
+  --chart-1: 248 57% 67%;
+  --chart-2: 160 69% 37%;
+  --chart-3: 15 65% 52%;
+  --chart-4: 35 78% 41%;
+  --chart-5: 340 60% 58%;
 }
 
 @layer base {
@@ -137,6 +153,6 @@
     @apply border-border;
   }
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased bg-background text-foreground tracking-tight selection:bg-primary/20 selection:text-foreground;
   }
 }
