@@ -13,8 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
-import { Trash2, Plus, CheckSquare } from "lucide-react";
+import { Trash2, Plus, CheckSquare, Sparkles, ListTodo } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Category = "today" | "weekly" | "longterm";
@@ -27,9 +26,9 @@ const categoryLabels: Record<Category, string> = {
 };
 
 const priorityColors: Record<Priority, string> = {
-  low: "bg-green-100 text-green-700",
-  medium: "bg-yellow-100 text-yellow-700",
-  high: "bg-red-100 text-red-700",
+  low: "bg-emerald-100 text-emerald-700",
+  medium: "bg-amber-100 text-amber-700",
+  high: "bg-red-100 text-red-600",
 };
 
 export default function Tasks() {
@@ -81,19 +80,24 @@ export default function Tasks() {
       </header>
 
       {/* Progress Bar */}
-      <Card className="border-[#e8e6df] shadow-sm">
+      <Card className="glass-card border-primary/10 glow-primary">
         <CardContent className="p-6">
           <div className="flex justify-between items-center mb-3">
-            <span className="text-sm font-medium text-foreground">Overall Completion</span>
+            <span className="text-sm font-semibold text-foreground">Overall Completion</span>
             <span className="text-sm font-bold text-primary">{completionPct}%</span>
           </div>
-          <Progress value={completionPct} className="h-2.5 bg-[#e8e6df]" data-testid="completion-progress" />
+          <div className="h-2.5 bg-primary/10 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500"
+              style={{ width: `${completionPct}%` }}
+            />
+          </div>
           <p className="text-xs text-muted-foreground mt-2">{completedCount} of {totalCount} tasks done</p>
         </CardContent>
       </Card>
 
       {/* Add Task */}
-      <Card className="border-[#e8e6df] shadow-sm">
+      <Card className="bg-white/70 backdrop-blur-sm border-border/50 shadow-sm">
         <CardContent className="p-6">
           <h2 className="text-base font-semibold mb-4">Add New Task</h2>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -102,11 +106,11 @@ export default function Tasks() {
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-              className="flex-1 bg-white border-[#e8e6df]"
+              className="flex-1 bg-white/80 border-border/50 focus:ring-primary/30"
               data-testid="input-task-title"
             />
             <Select value={newCategory} onValueChange={(v) => setNewCategory(v as Category)}>
-              <SelectTrigger className="w-full sm:w-36 bg-white border-[#e8e6df]" data-testid="select-task-category">
+              <SelectTrigger className="w-full sm:w-36 bg-white/80 border-border/50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -116,7 +120,7 @@ export default function Tasks() {
               </SelectContent>
             </Select>
             <Select value={newPriority} onValueChange={(v) => setNewPriority(v as Priority)}>
-              <SelectTrigger className="w-full sm:w-32 bg-white border-[#e8e6df]" data-testid="select-task-priority">
+              <SelectTrigger className="w-full sm:w-32 bg-white/80 border-border/50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -128,7 +132,7 @@ export default function Tasks() {
             <Button
               onClick={handleAdd}
               disabled={!newTitle.trim() || createTask.isPending}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_12px_rgba(124,252,0,0.2)] hover:shadow-[0_0_16px_rgba(124,252,0,0.4)] transition-all"
+              className="bg-gradient-to-r from-primary to-secondary text-white rounded-xl shadow-md hover:shadow-lg transition-all"
               data-testid="button-add-task"
             >
               <Plus className="w-4 h-4 mr-2" /> Add Task
@@ -144,10 +148,10 @@ export default function Tasks() {
             key={cat}
             onClick={() => setActiveCategory(cat)}
             data-testid={`filter-${cat}`}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
               activeCategory === cat
-                ? "bg-primary text-primary-foreground shadow-[0_0_12px_rgba(124,252,0,0.3)]"
-                : "bg-white border border-[#e8e6df] text-muted-foreground hover:bg-black/5"
+                ? "bg-primary text-white shadow-md glow-primary"
+                : "bg-white/70 border border-border/50 text-muted-foreground hover:bg-primary/5 hover:text-primary"
             }`}
           >
             {cat === "all" ? "All Tasks" : categoryLabels[cat]}
@@ -156,7 +160,7 @@ export default function Tasks() {
       </div>
 
       {/* Task List */}
-      <Card className="border-[#e8e6df] shadow-sm">
+      <Card className="bg-white/70 backdrop-blur-sm border-border/50 shadow-sm">
         <CardContent className="p-6">
           {isLoading ? (
             <div className="space-y-3">
@@ -168,12 +172,12 @@ export default function Tasks() {
                 <div
                   key={task.id}
                   data-testid={`task-item-${task.id}`}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-black/[0.02] transition-all group border border-transparent hover:border-[#e8e6df]"
+                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-primary/[0.03] transition-all group border border-transparent hover:border-border/50"
                 >
                   <Checkbox
                     checked={task.completed}
                     onCheckedChange={() => handleToggle(task.id, task.completed)}
-                    className="border-[#e8e6df] data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                     data-testid={`checkbox-task-${task.id}`}
                   />
                   <span className={`flex-1 text-sm ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
@@ -182,7 +186,7 @@ export default function Tasks() {
                   <Badge className={`text-xs border-0 ${priorityColors[task.priority as Priority] ?? "bg-gray-100 text-gray-600"}`}>
                     {task.priority}
                   </Badge>
-                  <Badge variant="outline" className="text-xs border-[#e8e6df] text-muted-foreground">
+                  <Badge variant="outline" className="text-xs border-border/50 text-muted-foreground">
                     {categoryLabels[task.category as Category] ?? task.category}
                   </Badge>
                   <button
@@ -195,10 +199,12 @@ export default function Tasks() {
                 </div>
               ))}
               {!tasks?.length && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <CheckSquare className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                  <p className="font-medium">No tasks here</p>
-                  <p className="text-sm mt-1">Add a task above to get started</p>
+                <div className="flex flex-col items-center py-16 text-center">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 animate-float">
+                    <ListTodo className="w-8 h-8 text-primary" />
+                  </div>
+                  <p className="font-semibold text-foreground mb-1">Nothing here yet ✨</p>
+                  <p className="text-sm text-muted-foreground">Start by adding your first task above</p>
                 </div>
               )}
             </div>

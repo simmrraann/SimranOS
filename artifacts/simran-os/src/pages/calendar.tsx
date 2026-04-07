@@ -14,14 +14,13 @@ export default function CalendarPage() {
   const monthEnd = endOfMonth(currentDate);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-  // Pad start of month
-  const startPadding = getDay(monthStart); // 0 = Sunday
+  const startPadding = getDay(monthStart);
   const paddedDays = Array(startPadding).fill(null).concat(daysInMonth);
 
   const today = new Date();
   const completedTasksCount = tasks?.filter((t) => t.completed).length ?? 0;
   const totalHabitsCount = habits?.length ?? 0;
-  const completedHabitsToday = habits?.filter((h) => h.completedToday).length ?? 0;
+  const completedHabitsToday = habits?.filter((h: any) => h.completed_today).length ?? 0;
 
   const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
   const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
@@ -38,42 +37,31 @@ export default function CalendarPage() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-[#e8e6df] shadow-sm">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-primary">{completedTasksCount}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Tasks Done</p>
-          </CardContent>
-        </Card>
-        <Card className="border-[#e8e6df] shadow-sm">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">{completedHabitsToday}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Habits Today</p>
-          </CardContent>
-        </Card>
-        <Card className="border-[#e8e6df] shadow-sm">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">{tasks?.length ?? 0}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Total Tasks</p>
-          </CardContent>
-        </Card>
-        <Card className="border-[#e8e6df] shadow-sm">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">{totalHabitsCount}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Active Habits</p>
-          </CardContent>
-        </Card>
+        {[
+          { label: "Tasks Done", value: completedTasksCount, color: "text-primary" },
+          { label: "Habits Today", value: completedHabitsToday, color: "text-secondary" },
+          { label: "Total Tasks", value: tasks?.length ?? 0, color: "text-accent" },
+          { label: "Active Habits", value: totalHabitsCount, color: "text-emerald-500" },
+        ].map((stat) => (
+          <Card key={stat.label} className="bg-white/70 backdrop-blur-sm border-border/50 shadow-sm">
+            <CardContent className="p-4 text-center">
+              <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Calendar */}
-      <Card className="border-[#e8e6df] shadow-sm">
+      <Card className="bg-white/70 backdrop-blur-sm border-border/50 shadow-sm">
         <CardContent className="p-6">
           {/* Month Navigation */}
           <div className="flex items-center justify-between mb-6">
-            <Button variant="ghost" size="icon" onClick={prevMonth} className="hover:bg-black/5" data-testid="button-prev-month">
+            <Button variant="ghost" size="icon" onClick={prevMonth} className="hover:bg-primary/5 rounded-xl">
               <ChevronLeft className="w-4 h-4" />
             </Button>
             <h2 className="text-lg font-semibold">{format(currentDate, "MMMM yyyy")}</h2>
-            <Button variant="ghost" size="icon" onClick={nextMonth} className="hover:bg-black/5" data-testid="button-next-month">
+            <Button variant="ghost" size="icon" onClick={nextMonth} className="hover:bg-primary/5 rounded-xl">
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
@@ -81,7 +69,7 @@ export default function CalendarPage() {
           {/* Day Headers */}
           <div className="grid grid-cols-7 mb-3">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-              <div key={d} className="text-center text-xs font-medium text-muted-foreground py-2">{d}</div>
+              <div key={d} className="text-center text-xs font-semibold text-muted-foreground py-2">{d}</div>
             ))}
           </div>
 
@@ -92,9 +80,8 @@ export default function CalendarPage() {
               const isCurrentMonth = isSameMonth(day, currentDate);
               const isTodayDate = isToday(day);
               const isPast = day < today && !isTodayDate;
-              // Simulate completion for past days (random for visual interest)
               const dayNum = day.getDate();
-              const hasActivity = isPast && (dayNum % 3 !== 0);
+              const hasActivity = isPast && dayNum % 3 !== 0;
 
               return (
                 <div
@@ -102,11 +89,11 @@ export default function CalendarPage() {
                   data-testid={`calendar-day-${format(day, "yyyy-MM-dd")}`}
                   className={`aspect-square rounded-xl flex flex-col items-center justify-center text-sm transition-all ${
                     isTodayDate
-                      ? "bg-primary text-primary-foreground font-bold shadow-[0_0_12px_rgba(124,252,0,0.3)]"
+                      ? "bg-gradient-to-br from-primary to-secondary text-white font-bold shadow-md glow-primary"
                       : hasActivity
-                      ? "bg-primary/10 text-foreground hover:bg-primary/20 cursor-pointer"
+                      ? "bg-primary/8 text-foreground hover:bg-primary/15 cursor-pointer"
                       : isCurrentMonth
-                      ? "text-foreground hover:bg-black/5 cursor-pointer"
+                      ? "text-foreground hover:bg-primary/5 cursor-pointer"
                       : "text-muted-foreground/30"
                   }`}
                 >
@@ -120,13 +107,13 @@ export default function CalendarPage() {
           </div>
 
           {/* Legend */}
-          <div className="flex items-center gap-6 mt-6 pt-4 border-t border-[#e8e6df]">
+          <div className="flex items-center gap-6 mt-6 pt-4 border-t border-border/30">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-primary" />
+              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-primary to-secondary" />
               <span className="text-xs text-muted-foreground">Today</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-primary/20" />
+              <div className="w-3 h-3 rounded-full bg-primary/15" />
               <span className="text-xs text-muted-foreground">Active day</span>
             </div>
           </div>
